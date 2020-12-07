@@ -69,6 +69,7 @@ import alluxio.master.audit.AuditContext;
 import alluxio.master.block.BlockId;
 import alluxio.master.block.BlockMaster;
 import alluxio.master.file.activesync.ActiveSyncManager;
+import alluxio.master.file.contexts.CheckAccessContext;
 import alluxio.master.file.contexts.CheckConsistencyContext;
 import alluxio.master.file.contexts.CompleteFileContext;
 import alluxio.master.file.contexts.CreateDirectoryContext;
@@ -496,7 +497,9 @@ public final class DefaultFileSystemMaster extends CoreMaster
           && ServerConfiguration.getBoolean(PropertyKey.UNDERFS_OBJECT_STORE_MOUNT_SHARED_PUBLICLY);
       boolean readonly = ServerConfiguration.getBoolean(
           PropertyKey.MASTER_MOUNT_TABLE_ROOT_READONLY);
-      String rootUfsUri = ServerConfiguration.get(PropertyKey.MASTER_MOUNT_TABLE_ROOT_UFS);
+      String rootUfsUri = PathUtils.normalizePath(
+          ServerConfiguration.get(PropertyKey.MASTER_MOUNT_TABLE_ROOT_UFS),
+          AlluxioURI.SEPARATOR);
       Map<String, String> rootUfsConf =
           ServerConfiguration.getNestedProperties(PropertyKey.MASTER_MOUNT_TABLE_ROOT_OPTION);
       MountPOptions mountOptions = MountContext
@@ -1039,10 +1042,13 @@ public final class DefaultFileSystemMaster extends CoreMaster
           ensureFullPathAndUpdateCache(inodePath);
 
           auditContext.setSrcInode(inodePath.getInode());
-          DescendantType descendantTypeForListStatus =
-              (context.getOptions().getRecursive()) ? DescendantType.ALL : DescendantType.ONE;
-          listStatusInternal(context, rpcContext, inodePath, auditContext,
-              descendantTypeForListStatus, resultStream, 0);
+          if (!context.getOptions().hasLoadMetadataOnly()
+              || !context.getOptions().getLoadMetadataOnly()) {
+            DescendantType descendantTypeForListStatus =
+                (context.getOptions().getRecursive()) ? DescendantType.ALL : DescendantType.ONE;
+            listStatusInternal(context, rpcContext, inodePath, auditContext,
+                descendantTypeForListStatus, resultStream, 0);
+          }
           auditContext.setSucceeded(true);
           Metrics.FILE_INFOS_GOT.inc();
           if (!ufsAccessed) {
@@ -1179,6 +1185,36 @@ public final class DefaultFileSystemMaster extends CoreMaster
   @Override
   public FileSystemMasterView getFileSystemMasterView() {
     return new FileSystemMasterView(this);
+  }
+
+  @Override
+  public void checkAccess(AlluxioURI path, CheckAccessContext context)
+      throws FileDoesNotExistException, InvalidPathException, AccessControlException, IOException {
+    try (RpcContext rpcContext = createRpcContext(context);
+         FileSystemMasterAuditContext auditContext =
+             createAuditContext("checkAccess", path, null, null)) {
+      Mode.Bits bits = Mode.Bits.fromProto(context.getOptions().getBits());
+      syncMetadata(rpcContext,
+          path,
+          context.getOptions().getCommonOptions(),
+          DescendantType.NONE,
+          auditContext,
+          LockedInodePath::getInodeOrNull,
+          (inodePath, permChecker) -> permChecker.checkPermission(bits, inodePath)
+      );
+
+      LockingScheme lockingScheme =
+          createLockingScheme(path, context.getOptions().getCommonOptions(),
+              LockPattern.READ);
+      try (LockedInodePath inodePath = mInodeTree.lockInodePath(lockingScheme)) {
+        mPermissionChecker.checkPermission(bits, inodePath);
+        if (!inodePath.fullPathExists()) {
+          throw new FileDoesNotExistException(ExceptionMessage
+              .PATH_DOES_NOT_EXIST.getMessage(path));
+        }
+        auditContext.setSucceeded(true);
+      }
+    }
   }
 
   @Override
@@ -2736,6 +2772,7 @@ public final class DefaultFileSystemMaster extends CoreMaster
     try (RpcContext rpcContext = createRpcContext(context);
         FileSystemMasterAuditContext auditContext =
             createAuditContext("mount", alluxioPath, null, null)) {
+      ufsPath = new AlluxioURI(PathUtils.normalizePath(ufsPath.toString(), AlluxioURI.SEPARATOR));
 
       syncMetadata(rpcContext,
           alluxioPath,

@@ -740,6 +740,34 @@ public final class MetricKey implements Comparable<MetricKey> {
           .setMetricType(MetricType.GAUGE)
           .setIsClusterAggregated(false)
           .build();
+  public static final MetricKey WORKER_BLOCK_REMOVER_TRY_REMOVE_COUNT =
+      new Builder(Name.WORKER_BLOCK_REMOVER_TRY_REMOVE_COUNT)
+          .setDescription("The total number of blocks tried to be removed from this worker "
+              + "by asynchronous block remover.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey WORKER_BLOCK_REMOVER_REMOVED_COUNT =
+      new Builder(Name.WORKER_BLOCK_REMOVER_REMOVED_COUNT)
+          .setDescription("The total number of blocks removed from this worker "
+              + "by asynchronous block remover.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey WORKER_BLOCK_REMOVER_TRY_REMOVE_BLOCKS_SIZE =
+      new Builder(Name.WORKER_BLOCK_REMOVER_TRY_REMOVE_BLOCKS_SIZE)
+          .setDescription("The size of blocks to be removed from this worker "
+              + "by asynchronous block remover.")
+          .setMetricType(MetricType.GAUGE)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey WORKER_BLOCK_REMOVER_REMOVING_BLOCKS_SIZE =
+      new Builder(Name.WORKER_BLOCK_REMOVER_REMOVING_BLOCKS_SIZE)
+          .setDescription("The size of blocks is removing from this worker "
+              + "by asynchronous block remover.")
+          .setMetricType(MetricType.GAUGE)
+          .setIsClusterAggregated(false)
+          .build();
 
   // Client metrics
   public static final MetricKey CLIENT_BYTES_READ_LOCAL =
@@ -962,6 +990,31 @@ public final class MetricKey implements Comparable<MetricKey> {
           .setMetricType(MetricType.COUNTER)
           .setIsClusterAggregated(false)
           .build();
+  public static final MetricKey CLIENT_CACHE_STORE_DELETE_TIMEOUT =
+      new Builder(Name.CLIENT_CACHE_STORE_DELETE_TIMEOUT)
+          .setDescription("Number of timeouts when deleting pages from page store.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey CLIENT_CACHE_STORE_GET_TIMEOUT =
+      new Builder(Name.CLIENT_CACHE_STORE_GET_TIMEOUT)
+          .setDescription("Number of timeouts when reading pages from page store.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey CLIENT_CACHE_STORE_PUT_TIMEOUT =
+      new Builder(Name.CLIENT_CACHE_STORE_PUT_TIMEOUT)
+          .setDescription("Number of timeouts when writing new pages to page store.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
+  public static final MetricKey CLIENT_CACHE_STORE_THREADS_REJECTED =
+      new Builder(Name.CLIENT_CACHE_STORE_THREADS_REJECTED)
+          .setDescription("Number of rejection of I/O threads on submitting tasks to thread pool, "
+              + "likely due to unresponsive local file system.")
+          .setMetricType(MetricType.COUNTER)
+          .setIsClusterAggregated(false)
+          .build();
   public static final MetricKey CLIENT_CACHE_STATE =
       new Builder(Name.CLIENT_CACHE_STATE)
           .setDescription("State of the cache: 0 (NOT_IN_USE), 1 (READ_ONLY) and 2 (READ_WRITE)")
@@ -1150,6 +1203,14 @@ public final class MetricKey implements Comparable<MetricKey> {
     public static final String WORKER_CAPACITY_TOTAL = "Worker.CapacityTotal";
     public static final String WORKER_CAPACITY_USED = "Worker.CapacityUsed";
     public static final String WORKER_CAPACITY_FREE = "Worker.CapacityFree";
+    public static final String WORKER_BLOCK_REMOVER_TRY_REMOVE_COUNT
+        = "Worker.BlockRemoverTryRemoveCount";
+    public static final String WORKER_BLOCK_REMOVER_REMOVED_COUNT
+        = "Worker.BlockRemoverBlocksToRemovedCount";
+    public static final String WORKER_BLOCK_REMOVER_TRY_REMOVE_BLOCKS_SIZE
+        = "Worker.BlockRemoverTryRemoveBlocksSize";
+    public static final String WORKER_BLOCK_REMOVER_REMOVING_BLOCKS_SIZE
+        = "Worker.BlockRemoverRemovingBlocksSize";
 
     // Client metrics
     public static final String CLIENT_BYTES_READ_LOCAL = "Client.BytesReadLocal";
@@ -1203,6 +1264,14 @@ public final class MetricKey implements Comparable<MetricKey> {
         "Client.CachePutStoreDeleteErrors";
     public static final String CLIENT_CACHE_PUT_STORE_WRITE_ERRORS =
         "Client.CachePutStoreWriteErrors";
+    public static final String CLIENT_CACHE_STORE_DELETE_TIMEOUT =
+        "Client.CacheStoreDeleteTimeout";
+    public static final String CLIENT_CACHE_STORE_GET_TIMEOUT =
+        "Client.CacheStoreGetTimeout";
+    public static final String CLIENT_CACHE_STORE_PUT_TIMEOUT =
+        "Client.CacheStorePutTimeout";
+    public static final String CLIENT_CACHE_STORE_THREADS_REJECTED =
+        "Client.CacheStoreThreadsRejected";
     public static final String CLIENT_CACHE_STATE = "Client.CacheState";
     public static final String CLIENT_CACHE_UNREMOVABLE_FILES = "Client.CacheUnremovableFiles";
 

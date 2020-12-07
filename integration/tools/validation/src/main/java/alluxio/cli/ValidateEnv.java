@@ -147,6 +147,9 @@ public final class ValidateEnv {
             new SshValidationTask(mConf), mCommonTasks);
 
     // UFS validations
+    registerTask("ufs.version",
+        "This validates the a configured UFS library version is available on the system.",
+        new UfsVersionValidationTask(mPath, mConf), mCommonTasks);
     registerTask("ufs.path.accessible",
             "This validates the under file system location is accessible to Alluxio.",
             new UfsDirectoryValidationTask(mPath, mConf), mCommonTasks);
@@ -245,7 +248,7 @@ public final class ValidateEnv {
   private boolean validateRemote(String node, String target, String name,
                                  CommandLine cmd) throws InterruptedException {
     System.out.format("Validating %s environment on %s...%n", target, node);
-    if (!CommonUtils.isAddressReachable(node, 22)) {
+    if (!CommonUtils.isAddressReachable(node, 22, 30 * Constants.SECOND_MS)) {
       System.err.format("Unable to reach ssh port 22 on node %s.%n", node);
       return false;
     }

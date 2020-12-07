@@ -32,6 +32,7 @@ import alluxio.proto.journal.File.AddSyncPointEntry;
 import alluxio.proto.journal.File.RemoveSyncPointEntry;
 import alluxio.proto.journal.Journal;
 import alluxio.proto.journal.Journal.JournalEntry;
+import alluxio.resource.CloseableIterator;
 import alluxio.resource.CloseableResource;
 import alluxio.resource.LockResource;
 import alluxio.retry.RetryUtils;
@@ -152,7 +153,8 @@ public class ActiveSyncManager implements Journaled {
   public boolean isUnderSyncPoint(AlluxioURI path) {
     for (AlluxioURI syncedPath : mSyncPathList) {
       try {
-        if (PathUtils.hasPrefix(path.getPath(), syncedPath.getPath())) {
+        if (PathUtils.hasPrefix(path.getPath(), syncedPath.getPath())
+            && mMountTable.getMountPoint(path).equals(mMountTable.getMountPoint(syncedPath))) {
           return true;
         }
       } catch (InvalidPathException e) {
@@ -752,7 +754,8 @@ public class ActiveSyncManager implements Journaled {
   }
 
   @Override
-  public Iterator<JournalEntry> getJournalEntryIterator() {
-    return Iterators.concat(getSyncPathIterator(), getTxIdIterator());
+  public CloseableIterator<JournalEntry> getJournalEntryIterator() {
+    return CloseableIterator.noopCloseable(
+        Iterators.concat(getSyncPathIterator(), getTxIdIterator()));
   }
 }
